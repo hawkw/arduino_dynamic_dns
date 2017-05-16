@@ -46,6 +46,8 @@ String get_public_ip(EthernetClient client) {
     while (client.connected() || client.available()) {
         buf = buf + client.read();
     }
+
+    client.stop();
     return buf;
 }
 
@@ -120,6 +122,7 @@ public:
                     // TODO: actually interpret response
                 }
             }
+            client.stop();
             return UpdateResult::Updated;
         } else {
             return UpdateResult::Error;
