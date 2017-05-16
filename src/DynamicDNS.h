@@ -52,6 +52,13 @@ class DynamicDNS {
 protected:
     String domain;
     String last_addr;
+    EthernetClient client;
+
+    DynamicDNS(EthernetClient ethernet_client, String domain_name)
+        : domain { domain_name }
+        , client { client }
+        , last_addr (get_public_ip(ethernet_client));
+
 public:
     virtual UpdateResult update(void) = 0;
 };
@@ -75,19 +82,16 @@ public:
     NamecheapDDNS( EthernetClient ethernet_client
                  , String domain_name
                  , String password)
-        : client { ethernet_client }
-        , domain { domain_name }
+        : DynamicDNS(ethernet_client, domain_name)
         , pass { password }
         , host { "@" }
-        , last_addr (get_public_ip(ethernet_client))
         ();
 
     NamecheapDDNS( EthernetClient ethernet_client
                  , String domain_name
                  , String password
                  , String host_name)
-        : client { ethernet_client }
-        , domain { domain_name }
+        : DynamicDNS(ethernet_client, domain_name)
         , pass { password }
         , host { host_name }
         , last_addr (get_public_ip(ethernet_client))
