@@ -1,9 +1,9 @@
 { "name": "Dynamic DNS"
-, "keywords": "arduino, led"
+, "keywords": "arduino, networking, dns"
 , "description": "Arduino dynamic DNS library"
 , "repository":
  { "type": "git"
- , "url": "https://github.com/hawkw/dynamic_dns" }
+ , "url": "https://github.com/hawkw/arduino_dynamic_dns" }
 , "authors":
  { "name": "Eliza Weisman"
   , "email": "eliza@elizas.website"
