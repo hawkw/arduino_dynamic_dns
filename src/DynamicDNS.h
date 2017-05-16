@@ -32,8 +32,9 @@ enum class UpdateResult { Error, Updated, Unchanged };
 
 String get_public_ip(EthernetClient client) {
     if (client.connect("checkip.dyndns.com", 80)) {
-        client.println("GET / HTTP/1.0\n" +
-                       "Host: checkip.dyndns.com\n");
+        client.println("GET / HTTP/1.0");
+        client.println("Host: checkip.dyndns.com");
+        client.println();
     } else {
         return;
     }
@@ -57,7 +58,8 @@ protected:
     DynamicDNS(EthernetClient ethernet_client, String domain_name)
         : domain { domain_name }
         , client { client }
-        , last_addr (get_public_ip(ethernet_client));
+        , last_addr (get_public_ip(ethernet_client))
+        {};
 
 public:
     virtual UpdateResult update(void) = 0;
@@ -71,7 +73,7 @@ private:
 
     /* Builds the Namecheap dynamic DNS update string */
     String request(void) {
-        return "GET /update?"
+        return String("GET /update?")
                 + "host=" + this->host
                 + "&domain=" + this->domain
                 + "&password=" + this->pass
@@ -85,7 +87,7 @@ public:
         : DynamicDNS(ethernet_client, domain_name)
         , pass { password }
         , host { "@" }
-        ();
+        {};
 
     NamecheapDDNS( EthernetClient ethernet_client
                  , String domain_name
@@ -94,8 +96,7 @@ public:
         : DynamicDNS(ethernet_client, domain_name)
         , pass { password }
         , host { host_name }
-        , last_addr (get_public_ip(ethernet_client))
-        ();
+        {};
 
     UpdateResult update(void) {
         String addr = get_public_ip(this->client);
@@ -107,7 +108,7 @@ public:
         last_addr = addr;
 
         if (client.connect("https://dynamicdns.park-your-domain.com/", 80)) {
-            client.println(this.request());
+            client.println(this->request());
             client.println("Host: https://dynamicdns.park-your-domain.com/");
 
             while(client.connected()) {
