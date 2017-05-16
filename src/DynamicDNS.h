@@ -98,7 +98,9 @@ public:
         ();
 
     UpdateResult update(void) {
-        if (String addr = get_public_ip(this->client) == last_addr) {
+        String addr = get_public_ip(this->client);
+
+        if (addr == last_addr) {
             return UpdateResult::Unchanged;
         }
 
