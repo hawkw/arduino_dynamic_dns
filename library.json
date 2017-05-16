@@ -1,0 +1,16 @@
+{ "name": "Dynamic DNS"
+, "keywords": "arduino, led"
+, "description": "Arduino dynamic DNS library"
+, "repository":
+ { "type": "git"
+ , "url": "https://github.com/hawkw/dynamic_dns" }
+, "authors":
+ { "name": "Eliza Weisman"
+  , "email": "eliza@elizas.website"
+  , "url": "http://elizas.website"
+  , "maintainer": true }
+, "version": "0.1"
+, "frameworks": "arduino"
+, "platforms": "atmelavr"
+, "include": "src"
+}
