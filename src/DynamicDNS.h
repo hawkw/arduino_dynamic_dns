@@ -54,16 +54,19 @@ protected:
 
     static String get_public_ip(EthernetClient &client) {
         DDNS_DEBUG("getting public IP");
-        do { DDNS_DEBUG("."); } while (!client.connect(F(CHECK_IP_HOST), 80));
-        if () {
+        while (!client.connect(F(CHECK_IP_HOST), 80)) {
+            DDNS_DEBUG(".");
+            delay(100);
+        }
+        // if () {
             DDNS_DEBUGLN("\ncommected to " CHECK_IP_HOST);
             client.println(F("GET / HTTP/1.1\nHost: " CHECK_IP_HOST
                              "\nConnection: close"));
             client.println();
-        } else {
-            DDNS_DEBUGLN("IP check FAILED");
-            return;
-        }
+        // } else {
+        //     DDNS_DEBUGLN("IP check FAILED");
+        //     return;
+        // }
 
         String buf = "";
         while(client.connected() && !client.available()) {
