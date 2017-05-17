@@ -28,8 +28,10 @@
 #ifdef ArduLog_h
     #include <ArduLog.h>
     #define DDNS_DEBUGLN(m) DEBUGLN(m)
+    #define DDNS_DEBUG(m) DEBUG(m)
 #else
     #define DDNS_DEBUGLN(m) {}
+    #define DDNS_DEBUG(m) {}
 #endif
 
 #include <WString.h>
