@@ -25,8 +25,17 @@
     // TODO: add support for Wifi, etc
 #endif
 
+#ifdef ArduLog_h
+    #include <ArduLog.h>
+    #define DDNS_DEBUGLN(m) DEBUGLN(m)
+#else
+    #define DDNS_DEBUGLN(m) {}
+#endif
+
 #include <WString.h>
 #include <stdint.h>
+
+#define CHECK_IP_HOST "checkip.dyndns.com"
 
 enum class UpdateResult { Error, Updated, Unchanged };
 
@@ -44,8 +53,10 @@ protected:
         {};
 
     static String get_public_ip(EthernetClient client) {
-        if (client.connect(F("checkip.dyndns.com"), 80)) {
-            client.println(F("GET / HTTP/1.1\nHost: checkip.dyndns.com\n"));
+        DDNS_DEBUGLN("getting public IP");
+        if (client.connect(F(CHECK_IP_HOST), 80)) {
+            DDNS_DEBUGLN("commected to " CHECK_IP_HOST);
+            client.println(F("GET / HTTP/1.1\nHost: " CHECK_IP_HOST "\n"));
             client.println();
         } else {
             return;
@@ -56,7 +67,9 @@ protected:
             delay(1);
         }
         while (client.connected() || client.available()) {
-            buf = buf + client.read();
+            char c = client.read();
+            buf = buf + c
+            Serial.print(c);
         }
 
         client.stop();
