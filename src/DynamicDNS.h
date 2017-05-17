@@ -53,9 +53,10 @@ protected:
         {};
 
     static String get_public_ip(EthernetClient &client) {
-        DDNS_DEBUGLN("getting public IP");
-        if (client.connect(F(CHECK_IP_HOST), 80)) {
-            DDNS_DEBUGLN("commected to " CHECK_IP_HOST);
+        DDNS_DEBUG("getting public IP");
+        do { DDNS_DEBUG("."); } while (!client.connect(F(CHECK_IP_HOST), 80));
+        if () {
+            DDNS_DEBUGLN("\ncommected to " CHECK_IP_HOST);
             client.println(F("GET / HTTP/1.1\nHost: " CHECK_IP_HOST
                              "\nConnection: close"));
             client.println();
