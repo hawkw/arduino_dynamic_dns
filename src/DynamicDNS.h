@@ -98,7 +98,6 @@ class NamecheapDDNS : public DynamicDNS {
 private:
     String host;
     String pass;
-    EthernetClient client;
 
     /* Builds the Namecheap dynamic DNS update string */
     String request(void) {
