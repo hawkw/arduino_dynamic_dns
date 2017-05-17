@@ -37,7 +37,7 @@
 #include <WString.h>
 #include <stdint.h>
 
-#define CHECK_IP_HOST "checkip.dyndns.com"
+#define CHECK_IP_HOST "api.ipify.org"
 
 enum class UpdateResult { Error, Updated, Unchanged };
 
@@ -57,7 +57,9 @@ protected:
     static String get_public_ip(EthernetClient &client) {
         DDNS_DEBUG("getting public IP");
         while (!client.connect(F(CHECK_IP_HOST), 80)) {
-            DDNS_DEBUG(".");
+            #ifdef DEBUG
+                Serial.print('.');
+            #endif
             delay(100);
         }
         // if () {
