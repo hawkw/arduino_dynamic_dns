@@ -70,7 +70,7 @@ protected:
         }
         while (client.connected() || client.available()) {
             char c = client.read();
-            buf = buf + c
+            buf = buf + c;
             Serial.print(c);
         }
 
