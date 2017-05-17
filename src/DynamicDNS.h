@@ -30,27 +30,7 @@
 
 enum class UpdateResult { Error, Updated, Unchanged };
 
-String get_public_ip(EthernetClient client) {
-    if (client.connect("checkip.dyndns.com", 80)) {
-        client.println("GET / HTTP/1.0");
-        client.println("Host: checkip.dyndns.com");
-        client.println();
-    } else {
-        return;
-    }
-
-    String buf = "";
-    while(client.connected() && !client.available()) {
-        delay(1);
-    }
-    while (client.connected() || client.available()) {
-        buf = buf + client.read();
-    }
-
-    client.stop();
-    return buf;
-}
-
+/* Base class representing a generic dynamic DNS service */
 class DynamicDNS {
 protected:
     String domain;
@@ -62,6 +42,26 @@ protected:
         , client { client }
         , last_addr (get_public_ip(ethernet_client))
         {};
+
+    static String get_public_ip(EthernetClient client) {
+        if (client.connect(F("checkip.dyndns.com"), 80)) {
+            client.println(F("GET / HTTP/1.1\nHost: checkip.dyndns.com\n"));
+            client.println();
+        } else {
+            return;
+        }
+
+        String buf = "";
+        while(client.connected() && !client.available()) {
+            delay(1);
+        }
+        while (client.connected() || client.available()) {
+            buf = buf + client.read();
+        }
+
+        client.stop();
+        return buf;
+    }
 
 public:
     virtual UpdateResult update(void) = 0;
@@ -75,11 +75,11 @@ private:
 
     /* Builds the Namecheap dynamic DNS update string */
     String request(void) {
-        return String("GET /update?")
-                + "host=" + this->host
-                + "&domain=" + this->domain
-                + "&password=" + this->pass
-                + "HTTP/1.0";
+        return String(F("GET /update?"))
+                + F("host=") + this->host
+                + F("&domain=") + this->domain
+                + F("&password=") + this->pass
+                + F("HTTP/1.0");
     }
 
 public:
@@ -109,9 +109,9 @@ public:
 
         last_addr = addr;
 
-        if (client.connect("https://dynamicdns.park-your-domain.com/", 80)) {
+        if (client.connect(F("https://dynamicdns.park-your-domain.com/"), 80)) {
             client.println(this->request());
-            client.println("Host: https://dynamicdns.park-your-domain.com/");
+            client.println(F("Host: https://dynamicdns.park-your-domain.com/"));
 
             while(client.connected()) {
                 while(client.available()) {
