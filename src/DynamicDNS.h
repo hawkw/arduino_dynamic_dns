@@ -56,12 +56,16 @@ protected:
 
     static String get_public_ip(EthernetClient &client) {
         DDNS_DEBUG("getting public IP");
-        while (!client.connect(F(CHECK_IP_HOST), 80)) {
+        do {
+            // close any connection before send a new request.
+            // This will free the socket on the WiFi shield
+            client.stop();
             #ifdef DEBUG
                 Serial.print('.');
             #endif
             delay(100);
-        }
+
+        } while (!client.connect(F(CHECK_IP_HOST), 80));
         // if () {
             DDNS_DEBUGLN("\ncommected to " CHECK_IP_HOST);
             client.println(F("GET / HTTP/1.1\nHost: " CHECK_IP_HOST
