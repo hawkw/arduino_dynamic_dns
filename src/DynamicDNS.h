@@ -44,21 +44,23 @@ class DynamicDNS {
 protected:
     String domain;
     String last_addr;
-    EthernetClient client;
+    EthernetClient &client;
 
-    DynamicDNS(EthernetClient ethernet_client, String domain_name)
+    DynamicDNS(EthernetClient &ethernet_client, String domain_name)
         : domain { domain_name }
         , client { client }
         , last_addr (get_public_ip(ethernet_client))
         {};
 
-    static String get_public_ip(EthernetClient client) {
+    static String get_public_ip(EthernetClient &client) {
         DDNS_DEBUGLN("getting public IP");
         if (client.connect(F(CHECK_IP_HOST), 80)) {
             DDNS_DEBUGLN("commected to " CHECK_IP_HOST);
-            client.println(F("GET / HTTP/1.1\nHost: " CHECK_IP_HOST "\n"));
+            client.println(F("GET / HTTP/1.1\nHost: " CHECK_IP_HOST
+                             "\nConnection: close"));
             client.println();
         } else {
+            DDNS_DEBUGLN("IP check FAILED");
             return;
         }
 
@@ -96,7 +98,7 @@ private:
     }
 
 public:
-    NamecheapDDNS( EthernetClient ethernet_client
+    NamecheapDDNS( EthernetClient &ethernet_client
                  , String domain_name
                  , String password)
         : DynamicDNS(ethernet_client, domain_name)
@@ -104,7 +106,7 @@ public:
         , host { "@" }
         {};
 
-    NamecheapDDNS( EthernetClient ethernet_client
+    NamecheapDDNS( EthernetClient &ethernet_client
                  , String domain_name
                  , String password
                  , String host_name)
