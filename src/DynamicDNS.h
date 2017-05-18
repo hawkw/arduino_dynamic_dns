@@ -41,7 +41,8 @@
 
 enum class UpdateResult { Error, Updated, Unchanged };
 
-String get_public_ip(EthernetClient &client) {
+String get_public_ip(void) {
+    EthernetClient client;
     DDNS_DEBUG("getting public IP");
     do {
         // close any connection before send a new request.
@@ -55,9 +56,11 @@ String get_public_ip(EthernetClient &client) {
     #ifdef DEBUG
         Serial.println();
     #endif
-    DDNS_DEBUGLN("\ncommected to " CHECK_IP_HOST);
-    client.println(F("GET / HTTP/1.0\n"
-                     "Host: " CHECK_IP_HOST "\n"));
+    DDNS_DEBUGLN("commected to " CHECK_IP_HOST);
+    client.println(F("GET / HTTP/1.0"));
+    client.println(F("Host: " CHECK_IP_HOST ));
+    client.println(F("Connection: close"));
+    client.println();
     String buf = "";
     while(client.connected() && !client.available()) {
         delay(1);
@@ -65,11 +68,17 @@ String get_public_ip(EthernetClient &client) {
     while (client.connected() || client.available()) {
         char c = client.read();
         buf = buf + c;
-        Serial.print(c);
+        #ifdef DEBUG
+            Serial.print(c);
+        #endif
     }
 
     client.stop();
-    return buf;
+    #ifdef DEBUG
+        Serial.println();
+    #endif
+    String ip = buf.substring(buf.lastIndexOf('\n') + 1);
+    return ip;
 }
 
 /* Base class representing a generic dynamic DNS service */
@@ -77,12 +86,10 @@ class DynamicDNS {
 protected:
     String domain;
     String last_addr;
-    EthernetClient &client;
 
-    DynamicDNS(EthernetClient &ethernet_client, String domain_name)
+    DynamicDNS(String domain_name)
         : domain { domain_name }
-        , client { client }
-        , last_addr (get_public_ip(ethernet_client))
+        , last_addr { "" }
         {};
 
 public:
@@ -104,35 +111,37 @@ private:
     }
 
 public:
-    NamecheapDDNS( EthernetClient &ethernet_client
-                 , String domain_name
-                 , String password)
-        : DynamicDNS(ethernet_client, domain_name)
+    NamecheapDDNS(String domain_name, String password)
+        : DynamicDNS(domain_name)
         , pass { password }
         , host { "@" }
         {};
 
-    NamecheapDDNS( EthernetClient &ethernet_client
-                 , String domain_name
-                 , String password
-                 , String host_name)
-        : DynamicDNS(ethernet_client, domain_name)
+    NamecheapDDNS(String domain_name, String password, String host_name)
+        : DynamicDNS(domain_name)
         , pass { password }
         , host { host_name }
         {};
 
     UpdateResult update(void) {
-        String addr = get_public_ip(this->client);
+        DDNS_DEBUGLN("Updating namecheap.");
+        String addr = get_public_ip();
+
+        DDNS_DEBUG("Current public IP is ");
+        #ifdef DEBUG
+            Serial.println(addr);
+        #endif
 
         if (addr == last_addr) {
+            DDNS_DEBUGLN("IP address unchanged");
             return UpdateResult::Unchanged;
         }
-
+        EthernetClient client;
         last_addr = addr;
-
-        if (client.connect(F("https://dynamicdns.park-your-domain.com/"), 80)) {
+        DDNS_DEBUGLN("Connecting to Namecheap");
+        if (client.connect("dynamicdns.park-your-domain.com", 80)) {
             client.println(this->request());
-            client.println(F("Host: https://dynamicdns.park-your-domain.com/"));
+            client.println(F("Host: dynamicdns.park-your-domain.com"));
 
             while(client.connected()) {
                 while(client.available()) {
