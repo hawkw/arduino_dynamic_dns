@@ -82,10 +82,13 @@ String get_public_ip(void) {
 }
 
 /* Base class representing a generic dynamic DNS service */
+template <const char* REQUEST_URL>
 class DynamicDNS {
 protected:
     String domain;
     String last_addr;
+
+    virtual String make_request(void) = 0;
 
     DynamicDNS(String domain_name)
         : domain { domain_name }
@@ -93,38 +96,12 @@ protected:
         {};
 
 public:
-    virtual UpdateResult update(void) = 0;
-};
-
-class NamecheapDDNS : public DynamicDNS {
-private:
-    String host;
-    String pass;
-
-    /* Builds the Namecheap dynamic DNS update string */
-    String request(void) {
-        return String(F("GET /update?"))
-                + F("host=") + this->host
-                + F("&domain=") + this->domain
-                + F("&password=") + this->pass
-                + F("HTTP/1.0");
-    }
-
-public:
-    NamecheapDDNS(String domain_name, String password)
-        : DynamicDNS(domain_name)
-        , pass { password }
-        , host { "@" }
-        {};
-
-    NamecheapDDNS(String domain_name, String password, String host_name)
-        : DynamicDNS(domain_name)
-        , pass { password }
-        , host { host_name }
-        {};
-
     UpdateResult update(void) {
-        DDNS_DEBUGLN("Updating namecheap.");
+        DDNS_DEBUG("Updating ");
+        #ifdef DEBUG
+            Serial.println(REQUEST_URL);
+        #endif
+
         String addr = get_public_ip();
 
         DDNS_DEBUG("Current public IP is ");
@@ -138,10 +115,15 @@ public:
         }
         EthernetClient client;
         last_addr = addr;
-        DDNS_DEBUGLN("Connecting to Namecheap");
-        if (client.connect("dynamicdns.park-your-domain.com", 80)) {
-            client.println(this->request());
-            client.println(F("Host: dynamicdns.park-your-domain.com"));
+
+
+        if (client.connect(REQUEST_URL, 80)) {
+            DDNS_DEBUG("Connected to ");
+            #ifdef DEBUG
+                Serial.println(REQUEST_URL);
+            #endif
+            client.println(this->make_request());
+            client.println();
 
             while(client.connected()) {
                 while(client.available()) {
@@ -158,6 +140,38 @@ public:
             return UpdateResult::Error;
         }
     }
+};
+constexpr const char NAMECHEAP[] = "dynamicdns.park-your-domain.com";
+
+class NamecheapDDNS : public DynamicDNS<NAMECHEAP> {
+private:
+    String host;
+    String pass;
+protected:
+    /* Builds the Namecheap dynamic DNS update string */
+    String make_request(void) {
+        return String(F("GET /update?"))
+                + F("host=") + this->host
+                + F("&domain=") + this->domain
+                + F("&password=") + this->pass
+                + F(" HTTP/1.0\n"
+                    "Host: dynamicdns.park-your-domain.com\n"
+                    "Connection: close");
+    }
+
+public:
+    NamecheapDDNS(String domain_name, String password)
+        : DynamicDNS<NAMECHEAP>(domain_name)
+        , pass { password }
+        , host { "@" }
+        {};
+
+    NamecheapDDNS(String domain_name, String password, String host_name)
+        : DynamicDNS<NAMECHEAP>(domain_name)
+        , pass { password }
+        , host { host_name }
+        {};
+
 };
 
 #endif
