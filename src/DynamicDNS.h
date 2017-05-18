@@ -50,19 +50,14 @@ String get_public_ip(EthernetClient &client) {
         #ifdef DEBUG
             Serial.print('.');
         #endif
-        delay(100);
 
-    } while (!client.connect(F(CHECK_IP_HOST), 80));
-    // if () {
-        DDNS_DEBUGLN("\ncommected to " CHECK_IP_HOST);
-        client.println(F("GET / HTTP/1.1\nHost: " CHECK_IP_HOST
-                         "\nConnection: close"));
-        client.println();
-    // } else {
-    //     DDNS_DEBUGLN("IP check FAILED");
-    //     return;
-    // }
-
+    } while (!client.connect(CHECK_IP_HOST, 80));
+    #ifdef DEBUG
+        Serial.println();
+    #endif
+    DDNS_DEBUGLN("\ncommected to " CHECK_IP_HOST);
+    client.println(F("GET / HTTP/1.0\n"
+                     "Host: " CHECK_IP_HOST "\n"));
     String buf = "";
     while(client.connected() && !client.available()) {
         delay(1);
