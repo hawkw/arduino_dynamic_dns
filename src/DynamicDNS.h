@@ -41,6 +41,42 @@
 
 enum class UpdateResult { Error, Updated, Unchanged };
 
+String get_public_ip(EthernetClient &client) {
+    DDNS_DEBUG("getting public IP");
+    do {
+        // close any connection before send a new request.
+        // This will free the socket on the WiFi shield
+        client.stop();
+        #ifdef DEBUG
+            Serial.print('.');
+        #endif
+        delay(100);
+
+    } while (!client.connect(F(CHECK_IP_HOST), 80));
+    // if () {
+        DDNS_DEBUGLN("\ncommected to " CHECK_IP_HOST);
+        client.println(F("GET / HTTP/1.1\nHost: " CHECK_IP_HOST
+                         "\nConnection: close"));
+        client.println();
+    // } else {
+    //     DDNS_DEBUGLN("IP check FAILED");
+    //     return;
+    // }
+
+    String buf = "";
+    while(client.connected() && !client.available()) {
+        delay(1);
+    }
+    while (client.connected() || client.available()) {
+        char c = client.read();
+        buf = buf + c;
+        Serial.print(c);
+    }
+
+    client.stop();
+    return buf;
+}
+
 /* Base class representing a generic dynamic DNS service */
 class DynamicDNS {
 protected:
@@ -53,42 +89,6 @@ protected:
         , client { client }
         , last_addr (get_public_ip(ethernet_client))
         {};
-
-    static String get_public_ip(EthernetClient &client) {
-        DDNS_DEBUG("getting public IP");
-        do {
-            // close any connection before send a new request.
-            // This will free the socket on the WiFi shield
-            client.stop();
-            #ifdef DEBUG
-                Serial.print('.');
-            #endif
-            delay(100);
-
-        } while (!client.connect(F(CHECK_IP_HOST), 80));
-        // if () {
-            DDNS_DEBUGLN("\ncommected to " CHECK_IP_HOST);
-            client.println(F("GET / HTTP/1.1\nHost: " CHECK_IP_HOST
-                             "\nConnection: close"));
-            client.println();
-        // } else {
-        //     DDNS_DEBUGLN("IP check FAILED");
-        //     return;
-        // }
-
-        String buf = "";
-        while(client.connected() && !client.available()) {
-            delay(1);
-        }
-        while (client.connected() || client.available()) {
-            char c = client.read();
-            buf = buf + c;
-            Serial.print(c);
-        }
-
-        client.stop();
-        return buf;
-    }
 
 public:
     virtual UpdateResult update(void) = 0;
